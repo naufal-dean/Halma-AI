@@ -5,18 +5,13 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from model import Board
+from model import Board, GameState, Player
 
 
 class PageIdx(IntEnum):
     MAIN_MENU = 0
     SELECT_SIDE = 1
     IN_GAME = 2
-
-
-class Player(IntEnum):
-    RED = 0
-    GREEN = 1
 
 
 class MainWindow(QMainWindow):
@@ -40,15 +35,14 @@ class MainWindow(QMainWindow):
         self.quitGameBtn.clicked.connect(lambda: self.changePage(PageIdx.MAIN_MENU))
 
     # Slot methods
-    def startGame(self, humanPlayer: Player):
+    def startGame(self, humanPlayer: Player, boardSize=16):
         self.changePage(PageIdx.IN_GAME)
-        self.humanPlayer = humanPlayer
-        print(self.humanPlayer)
+        self.initGameState(humanPlayer, boardSize)
 
     # Game methods
-    def initBoard(self, size=16):
-        assert size in [8, 10, 16]
-        pass
+    def initGameState(self, humanPlayer, boardSize=16):
+        board = Board(boardSize)
+        self.gameState = GameState(board, humanPlayer)
 
     # Helper methods
     def spawnDialogWindow(self, title, text, subtext="", type="Information"):
