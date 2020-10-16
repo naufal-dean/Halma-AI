@@ -19,6 +19,8 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         loadUi(os.path.join(os.getcwd(), "view", "main_window.ui"), self)
         self.gameState = None
+        self.actCell = None
+        self.legalMoves = []
         # change page helper
         self.changePage = lambda idx: self.stackedWidget.setCurrentIndex(idx)
         # setup ui
@@ -33,13 +35,14 @@ class MainWindow(QMainWindow):
         self.pGreenBtn.clicked.connect(lambda: self.startGame(Player.GREEN))
         self.mainMenuNavBtn.clicked.connect(lambda: self.changePage(PageIdx.MAIN_MENU))
         # in game page
-        self.quitGameBtn.clicked.connect(lambda: self.changePage(PageIdx.MAIN_MENU))
+        self.quitGameBtn.clicked.connect(self.quitGame)
 
     def initBoardUI(self):
         for r, cellRow in enumerate(self.gameState.board.cells):
             for c, cell in enumerate(cellRow):
                 button = QPushButton()
                 button.clicked.connect(self.cellClickedHandler)
+                button.setProperty("highlight", "none")
                 button.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
                 button.setStyleSheet(self.getCellStyleSheet(cell.cell_type))
                 self.fields.addWidget(button, r, c)
@@ -57,19 +60,64 @@ class MainWindow(QMainWindow):
 
     # Slot methods
     def startGame(self, humanPlayer: Player, boardSize=16):
-        self.changePage(PageIdx.IN_GAME)
         self.initGameState(humanPlayer, boardSize)
         self.initBoardUI()
+        self.changePage(PageIdx.IN_GAME)
+
+    def quitGame(self):
+        for idx in reversed(range(self.fields.count())):
+            self.fields.itemAt(idx).widget().deleteLater()
+        self.gameState = None
+        self.changePage(PageIdx.MAIN_MENU)
 
     def cellClickedHandler(self):
         button = self.sender()
         r, c, _, _ = self.fields.getItemPosition(self.fields.indexOf(button))
+        # highlight helper
+        def highlightBtn(btn, option):  # option: {none, yellow, red}
+            btn.setProperty("highlight", option); btn.setStyle(btn.style());
+        # update old active cell and old legal moves
+        if self.actCell:
+            highlightBtn(self.fields.itemAtPosition(*self.actCell).widget(), "none")
+        for oldLegalMove in self.legalMoves:
+            highlightBtn(self.fields.itemAtPosition(*oldLegalMove).widget(), "none")
+        # move or select pion
+        if self.actCell and ((r, c) in self.legalMoves):  # moving pion
+            # move pion
+            self.gameState.board.move(self.actCell, (r, c))
+            self.updatePionPositionUI()
+            # check winner
+            winner = self.gameState.check_winner()
+            if winner is not None:
+                self.spawnDialogWindow("Game Ended", "The Winner is Player " + winner.name)
+            else:
+                self.gameState.next_turn()
+                self.calculateAIMove()
+            # update new active cell and new legal moves
+            self.actCell = None
+            self.legalMoves = []
+        else:  # selecting pion
+            # pion check if existing and owned
+            cell = self.gameState.board.cells[r][c]
+            if not cell.occupied_by(self.gameState.act_player):
+                highlightBtn(button, "none"); self.actCell = None; self.legalMoves = []; return;
+            # update new active cell and new legal moves
+            self.actCell = (r, c)
+            self.legalMoves = self.gameState.board.legal_moves((r, c))
+            highlightBtn(button, "yellow")
+            for legalMove in self.legalMoves:
+                highlightBtn(self.fields.itemAtPosition(*legalMove).widget(), "red")
+        # just some debug, TODO: remove
         print(r, c)
 
     # Game methods
     def initGameState(self, humanPlayer, boardSize=16):
         board = Board(boardSize)
         self.gameState = GameState(board, humanPlayer)
+
+    def calculateAIMove(self):
+        # TODO: implement
+        pass
 
     # Helper methods
     def spawnDialogWindow(self, title, text, subtext="", type="Information"):
@@ -94,9 +142,11 @@ class MainWindow(QMainWindow):
                    "#bdbdbd")
         stylesheet = """QPushButton {{
                             background-color: {bgColor};
-                            border: 1px solid #1b1b1b;
                             border-radius: 0;
                         }}
+                        QPushButton[highlight='none'] {{ border: 1px solid #1b1b1b; }}
+                        QPushButton[highlight='yellow'] {{ border: 2px solid yellow; }}
+                        QPushButton[highlight='red'] {{ border: 2px solid red; }}
                         QPushButton:hover {{
                             border: 2px solid yellow;
                         }}""".format(bgColor=bgColor)

@@ -1,5 +1,7 @@
 from enum import IntEnum
 
+from .player import Player
+
 
 class CellType(IntEnum):
     RED_HOUSE = 0
@@ -20,3 +22,11 @@ class Cell:
 
     def set_pion(self, pion):
         self.pion = pion
+
+    def occupied_by(self, player: Player):
+        if player == Player.RED:
+            return self.pion == Pion.RED
+        elif player == Player.GREEN:
+            return self.pion == Pion.GREEN
+        else:
+            return False
