@@ -1,6 +1,6 @@
 from collections import deque
-from cell import Cell, CellType, Pion
-from player import Player
+from .cell import Cell, CellType, Pion
+from .player import Player
 import sys, time, random
 
 class Board:
@@ -20,16 +20,16 @@ class Board:
         for i in range(len(d)):
             a = d[i].split(" | ")
             for j in range(len(a)):
-                self.matrix[i][j].pion = int(a[j])
+                self.cells[i][j].pion = int(a[j])
 
     def __getitem__(self, index):
         try:
-            return self.matrix[index[0]][index[1]]
+            return self.cells[index[0]][index[1]]
         except Exception:
             return None
 
     def gen_board(self):
-        self.matrix = []
+        self.cells = []
         for i in range(self.size):
             temp = []
 
@@ -47,9 +47,9 @@ class Board:
                 elif c >= d_size and j >= c:
                     owner = CellType.GREEN_HOUSE
                 temp.append(Cell(owner, owner, i, j))
-            self.matrix.append(temp)
+            self.cells.append(temp)
 
-    def go_everywhere(self, cell, possible_steps, s, original, id):
+    def go_everywhere(self, cell: Cell, possible_steps, s, original: Cell, id: int):
         steps = [(1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,1), (1,-1), (-1,-1)]
         for step in steps:
             row = cell.row + step[0]
@@ -67,7 +67,7 @@ class Board:
                             possible_steps.append((original, self[row, col]))
                             s.append(self[row, col])
 
-    def dfs_path(self, row, col, id):
+    def dfs_path(self, row: int, col: int, id: int):
         possible_steps = []
         s = deque()
         original = self[row, col]
@@ -77,7 +77,7 @@ class Board:
             self.go_everywhere(cell, possible_steps, s, original, id)
         return possible_steps
 
-    def gen_all_pos_steps(self, id):
+    def gen_all_pos_steps(self, id: int):
         possible_steps = deque()
         for row in range(self.size):
             for col in range(self.size):
@@ -85,15 +85,15 @@ class Board:
                     possible_steps.extend(self.dfs_path(row, col, id))
         return possible_steps
 
-    def apply_step(self, step):
+    def apply_step(self, step: tuple):
         step[1].pion = step[0].pion
         step[0].pion = Pion.NONE
 
-    def undo_step(self, step):
+    def undo_step(self, step: tuple):
         step[0].pion = step[1].pion
         step[1].pion = Pion.NONE
 
-    def terminal_test(self, depth, id, maxing):
+    def terminal_test(self, depth: int, id: int, maxing: bool):
         delta = time.time() - self.timer
         if depth == self.max_depth or self.max_time != -1 and delta > self.max_time:
             return None
@@ -123,24 +123,24 @@ class Board:
             return None
         return steps
 
-    def minimax(self, id):
+    def minimax(self, id: int):
         self.timer = time.time()
         self.child = 0
         return self.minimax_rec(id, True, 0, None, -sys.maxsize, sys.maxsize)
 
-    def init_step_cost(self, maxing):
+    def init_step_cost(self, maxing: bool):
         if maxing:
             return (-sys.maxsize, None)
         else:
             return (sys.maxsize, None)
 
-    def optimize_step_cost(self, maxing, osc1, osc2):
+    def optimize_step_cost(self, maxing: bool, osc1: tuple, osc2: tuple):
         if maxing:
             return osc1 if osc1[0] > osc2[0] or osc1[0] == osc2[0] and random.randint(1,2) == 1 else osc2
         else:
             return osc1 if osc1[0] < osc2[0] or osc1[0] == osc2[0] and random.randint(1,2) == 1 else osc2
 
-    def objective_function(self, id):
+    def objective_function(self, id: int):
         total = [0, 0]
         for row in range(self.size):
             for col in range(self.size):
@@ -159,7 +159,7 @@ class Board:
                     total[1] += row + col
         return - total[id-1] + total[(id%2)]
 
-    def minimax_rec(self, id, maxing, depth, step, a, b):
+    def minimax_rec(self, id: int, maxing: bool, depth: int, step: tuple, a: int, b: int):
         self.child += 1
         steps = self.terminal_test(depth, id, maxing)
         if steps is None:
@@ -184,6 +184,10 @@ class Board:
                     break
         return opt_step_cost
 
+    def legal_moves(self, row: int, col: int, id: int):
+        print(self.dfs_path(row, col, id))
+        return self.dfs_path(row, col, id)
+
     def play(self):
         try:
             for i in range(1000):
@@ -204,8 +208,8 @@ class Board:
     def print_matrix(self):
         for i in range(self.size):
             for j in range(self.size-1):
-                print(int(self.matrix[i][j].pion), end=" | ")
-            print(int(self.matrix[i][-1].pion))
+                print(int(self[i, j].pion), end=" | ")
+            print(int(self[i, -1].pion))
 
 if __name__ == "__main__":
     board = Board(16, max_depth=1, max_time=1, prune=True)

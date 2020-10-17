@@ -1,4 +1,4 @@
-from .board import Board
+from .halma import Board
 from .cell import Pion
 from .player import Player
 
@@ -16,7 +16,7 @@ class GameState:
         offset = 0
         for sum in range(self.board.size + (self.board.size // 2) - 2 + 1, (self.board.size - 1) * 2 + 1):
             for i in range((self.board.size // 2) + offset, self.board.size):
-                if self.board.cells[i][sum-i].pion != Pion.GREEN:
+                if self.board[i, sum-i].pion != Pion.RED:
                     return False
             offset += 1
         return True
@@ -24,7 +24,7 @@ class GameState:
     def is_green_player_win(self):
         for sum in range(0, self.board.size // 2):
             for i in range(0, sum + 1):
-                if self.board.cells[i][sum-i].pion != Pion.GREEN:
+                if self.board[i, sum-i].pion != Pion.GREEN:
                     return False
         return True
 

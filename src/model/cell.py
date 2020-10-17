@@ -1,6 +1,5 @@
 from enum import IntEnum
-from player import Player
-
+from .player import Player
 
 class CellType(IntEnum):
     NEUTRAL = 0
@@ -13,17 +12,18 @@ class Pion(IntEnum):
     GREEN = 2
 
 class Cell:
-    def __init__(self, owner, pion, row, col):
+    def __init__(self, owner: int, pion: int, row: int, col: int):
         self.owner = owner
         self.pion = pion
         self.row = row
         self.col = col
 
-    def check(self, cell, id):
+    def check(self, cell, id: int):
         return self.pion == Pion.NONE and not (
             cell.owner == CellType.NEUTRAL and self.owner == id or cell.owner != CellType.NEUTRAL and cell.owner != id and self.owner != cell.owner
         )
-    def set_pion(self, pion):
+
+    def set_pion(self, pion: int):
         self.pion = pion
 
     def occupied_by(self, player: Player):

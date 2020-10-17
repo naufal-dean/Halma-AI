@@ -44,7 +44,7 @@ class MainWindow(QMainWindow):
                 button.clicked.connect(self.cellClickedHandler)
                 button.setProperty("highlight", "none")
                 button.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-                button.setStyleSheet(self.getCellStyleSheet(cell.cell_type))
+                button.setStyleSheet(self.getCellStyleSheet(cell.owner))
                 self.fields.addWidget(button, r, c)
         self.updatePionPositionUI()
 
@@ -80,11 +80,11 @@ class MainWindow(QMainWindow):
         if self.actCell:
             highlightBtn(self.fields.itemAtPosition(*self.actCell).widget(), "none")
         for oldLegalMove in self.legalMoves:
-            highlightBtn(self.fields.itemAtPosition(*oldLegalMove).widget(), "none")
+            highlightBtn(self.fields.itemAtPosition(oldLegalMove[1].row, oldLegalMove[1].col).widget(), "none")
         # move or select pion
-        if self.actCell and ((r, c) in self.legalMoves):  # moving pion
+        if self.actCell and (self.gameState.board[self.actCell[0], self.actCell[1]], self.gameState.board[r, c]) in self.legalMoves:  # moving pion
             # move pion
-            self.gameState.board.move(self.actCell, (r, c))
+            self.gameState.board.apply_step((self.gameState.board[self.actCell[0], self.actCell[1]], self.gameState.board[r, c]))
             self.updatePionPositionUI()
             # check winner
             winner = self.gameState.check_winner()
@@ -98,15 +98,15 @@ class MainWindow(QMainWindow):
             self.legalMoves = []
         else:  # selecting pion
             # pion check if existing and owned
-            cell = self.gameState.board.cells[r][c]
+            cell = self.gameState.board[r, c]
             if not cell.occupied_by(self.gameState.act_player):
                 highlightBtn(button, "none"); self.actCell = None; self.legalMoves = []; return;
             # update new active cell and new legal moves
             self.actCell = (r, c)
-            self.legalMoves = self.gameState.board.legal_moves((r, c))
+            self.legalMoves = self.gameState.board.legal_moves(r, c, self.gameState.act_player)
             highlightBtn(button, "yellow")
             for legalMove in self.legalMoves:
-                highlightBtn(self.fields.itemAtPosition(*legalMove).widget(), "red")
+                highlightBtn(self.fields.itemAtPosition(legalMove[1].row, legalMove[1].col).widget(), "red")
         # just some debug, TODO: remove
         print(r, c)
 
