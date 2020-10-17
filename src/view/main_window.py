@@ -10,8 +10,9 @@ from model import *
 
 class PageIdx(IntEnum):
     MAIN_MENU = 0
-    SELECT_SIDE = 1
-    IN_GAME = 2
+    SELECT_SIZE = 1
+    SELECT_SIDE = 2
+    IN_GAME = 3
 
 
 class MainWindow(QMainWindow):
@@ -20,6 +21,7 @@ class MainWindow(QMainWindow):
         loadUi(os.path.join(os.getcwd(), "view", "main_window.ui"), self)
         self.gameState = None
         self.actCell = None
+        self.boardSize = 0
         self.legalMoves = []
         # change page helper
         self.changePage = lambda idx: self.stackedWidget.setCurrentIndex(idx)
@@ -28,12 +30,20 @@ class MainWindow(QMainWindow):
 
     def setupUI(self):
         # main menu page
-        self.playGameBtn.clicked.connect(lambda: self.changePage(PageIdx.SELECT_SIDE))
+        self.playGameBtn.clicked.connect(lambda: self.changePage(PageIdx.SELECT_SIZE))
         self.exitBtn.clicked.connect(lambda: self.close())
+        # select board size page
+        self.eight.clicked.connect(lambda:self.setBoardSize(8))
+        self.ten.clicked.connect(lambda:self.setBoardSize(10))
+        self.sixteen.clicked.connect(lambda:self.setBoardSize(16))
+        
         # select side page
-        self.pRedBtn.clicked.connect(lambda: self.startGame(Player.RED))
-        self.pGreenBtn.clicked.connect(lambda: self.startGame(Player.GREEN))
+        self.pRedBtn.clicked.connect(lambda: self.startGame(Player.RED, self.boardSize))
+        self.pGreenBtn.clicked.connect(lambda: self.startGame(Player.GREEN, self.boardSize))
         self.mainMenuNavBtn.clicked.connect(lambda: self.changePage(PageIdx.MAIN_MENU))
+        
+
+
         # in game page
         self.quitGameBtn.clicked.connect(self.quitGame)
 
@@ -59,7 +69,7 @@ class MainWindow(QMainWindow):
                 button.setIcon(QIcon(icon_path))
 
     # Slot methods
-    def startGame(self, humanPlayer: Player, boardSize=16):
+    def startGame(self, humanPlayer: Player, boardSize):
         self.initGameState(humanPlayer, boardSize)
         self.initBoardUI()
         self.changePage(PageIdx.IN_GAME)
@@ -110,8 +120,12 @@ class MainWindow(QMainWindow):
         # just some debug, TODO: remove
         print(r, c)
 
+    def setBoardSize(self, boardSize):
+        self.boardSize = boardSize
+        self.changePage(PageIdx.SELECT_SIDE)
+
     # Game methods
-    def initGameState(self, humanPlayer, boardSize=16):
+    def initGameState(self, humanPlayer, boardSize):
         board = Board(boardSize)
         self.gameState = GameState(board, humanPlayer)
 

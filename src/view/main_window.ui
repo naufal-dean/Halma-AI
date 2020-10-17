@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>MainWindow</class>
+
+ <!-- Main menu page -->
  <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
    <rect>
@@ -89,6 +91,89 @@
       </widget>
      </widget>
     </widget>
+
+    <widget class="QWidget" name="selectBoardSizeMenuPage">
+     <widget class="QLabel" name="selectSizeTitle">
+      <property name="geometry">
+       <rect>
+        <x>450</x>
+        <y>150</y>
+        <width>231</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Segoe UI Semibold</family>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Select Board Size</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QGroupBox" name="selectSizeGroup">
+      <property name="geometry">
+       <rect>
+        <x>420</x>
+        <y>260</y>
+        <width>291</width>
+        <height>321</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string/>
+      </property>
+      <widget class="QPushButton" name="eight">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>20</y>
+         <width>251</width>
+         <height>81</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>8 x 8</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="ten">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>120</y>
+         <width>251</width>
+         <height>81</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>10 x 10</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="sixteen">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>220</y>
+         <width>251</width>
+         <height>81</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>16 x 16</string>
+       </property>
+      </widget>
+     </widget>
+    </widget>
+
+
+    <!-- Select color page -->
     <widget class="QWidget" name="selectSideMenuPage">
      <widget class="QLabel" name="selectSideTitle">
       <property name="geometry">
@@ -168,6 +253,8 @@
       </widget>
      </widget>
     </widget>
+
+    <!-- Game page -->
     <widget class="QWidget" name="inGamePage">
      <widget class="QLabel" name="fieldsLabel">
       <property name="geometry">
@@ -203,11 +290,36 @@
        </property>
       </layout>
      </widget>
+      <widget class="QLabel" name="selectSizeTitle">
+      <property name="geometry">
+       <rect>
+        <x>830</x>
+        <y>60</y>
+        <width>231</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Segoe UI Semibold</family>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>NOW: </string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
      <widget class="QPushButton" name="quitGameBtn">
       <property name="geometry">
        <rect>
         <x>860</x>
-        <y>90</y>
+        <y>150</y>
         <width>141</width>
         <height>51</height>
        </rect>
