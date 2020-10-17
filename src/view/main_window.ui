@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>MainWindow</class>
-
- <!-- Main menu page -->
  <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
    <rect>
@@ -91,7 +89,6 @@
       </widget>
      </widget>
     </widget>
-
     <widget class="QWidget" name="selectBoardSizeMenuPage">
      <widget class="QLabel" name="selectSizeTitle">
       <property name="geometry">
@@ -171,9 +168,85 @@
       </widget>
      </widget>
     </widget>
-
-
-    <!-- Select color page -->
+    <widget class="QWidget" name="selectGameModeMenuPage">
+     <widget class="QGroupBox" name="selectModeGroup">
+      <property name="geometry">
+       <rect>
+        <x>420</x>
+        <y>260</y>
+        <width>299</width>
+        <height>321</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string/>
+      </property>
+      <widget class="QPushButton" name="humanVsMinimax">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>20</y>
+         <width>251</width>
+         <height>81</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Human vs Bot Minimax</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="humanVsLocalSearch">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>120</y>
+         <width>251</width>
+         <height>81</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Human vs Bot Minimax with Local Search</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="minimaxVsLocalSearch">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>220</y>
+         <width>251</width>
+         <height>81</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Bot Minimax vs Bot Minimax Local Search</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QLabel" name="selectGameModeTitle">
+      <property name="geometry">
+       <rect>
+        <x>450</x>
+        <y>150</y>
+        <width>231</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Segoe UI Semibold</family>
+        <pointsize>13</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Select Game Mode</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </widget>
     <widget class="QWidget" name="selectSideMenuPage">
      <widget class="QLabel" name="selectSideTitle">
       <property name="geometry">
@@ -253,8 +326,6 @@
       </widget>
      </widget>
     </widget>
-
-    <!-- Game page -->
     <widget class="QWidget" name="inGamePage">
      <widget class="QLabel" name="fieldsLabel">
       <property name="geometry">
@@ -290,7 +361,7 @@
        </property>
       </layout>
      </widget>
-      <widget class="QLabel" name="curPlayer">
+     <widget class="QLabel" name="curPlayer">
       <property name="geometry">
        <rect>
         <x>800</x>
@@ -306,7 +377,7 @@
        </font>
       </property>
       <property name="text">
-       <string></string>
+       <string/>
       </property>
       <property name="textFormat">
        <enum>Qt::AutoText</enum>

@@ -11,8 +11,9 @@ from model import *
 class PageIdx(IntEnum):
     MAIN_MENU = 0
     SELECT_SIZE = 1
-    SELECT_SIDE = 2
-    IN_GAME = 3
+    SELECT_MODE = 2
+    SELECT_SIDE = 3
+    IN_GAME = 4
 
 
 class MainWindow(QMainWindow):
@@ -22,6 +23,7 @@ class MainWindow(QMainWindow):
         self.gameState = None
         self.actCell = None
         self.boardSize = 0
+        self.gameMode = ""
         self.legalMoves = []
         # change page helper
         self.changePage = lambda idx: self.stackedWidget.setCurrentIndex(idx)
@@ -36,6 +38,11 @@ class MainWindow(QMainWindow):
         self.eight.clicked.connect(lambda:self.setBoardSize(8))
         self.ten.clicked.connect(lambda:self.setBoardSize(10))
         self.sixteen.clicked.connect(lambda:self.setBoardSize(16))
+
+        # select game mode paga
+        self.humanVsMinimax.clicked.connect(lambda:self.setGameMode("human vs minimax"))
+        self.humanVsLocalSearch.clicked.connect(lambda:self.setGameMode("human vs local search"))
+        self.minimaxVsLocalSearch.clicked.connect(lambda:self.setGameMode("minimax vs local search"))
         
         # select side page
         self.pRedBtn.clicked.connect(lambda: self.startGame(Player.RED, self.boardSize))
@@ -131,6 +138,10 @@ class MainWindow(QMainWindow):
 
     def setBoardSize(self, boardSize):
         self.boardSize = boardSize
+        self.changePage(PageIdx.SELECT_MODE)
+
+    def setGameMode(self, gameMode):
+        self.gameMode = gameMode
         self.changePage(PageIdx.SELECT_SIDE)
 
     # Game methods
