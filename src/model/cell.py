@@ -1,22 +1,23 @@
 from enum import IntEnum
 
-
 class CellType(IntEnum):
-    RED_HOUSE = 0
-    GREEN_HOUSE = 1
-    NEUTRAL = 2
-
+    NEUTRAL = 0
+    RED_HOUSE = 1
+    GREEN_HOUSE = 2
 
 class Pion(IntEnum):
-    RED = 0
-    GREEN = 1
-    NONE = 2
-
+    NONE = 0
+    RED = 1
+    GREEN = 2
 
 class Cell:
-    def __init__(self, cell_type: CellType, pion: Pion):
-        self.cell_type = cell_type
+    def __init__(self, owner, pion, row, col):
+        self.owner = owner
         self.pion = pion
+        self.row = row
+        self.col = col
 
-    def set_pion(self, pion):
-        self.pion = pion
+    def check(self, cell, id):
+        return self.pion == Pion.NONE and not (
+            cell.owner == CellType.NEUTRAL and self.owner == id or cell.owner != CellType.NEUTRAL and cell.owner != id and self.owner != cell.owner
+        )
