@@ -1,4 +1,6 @@
 from enum import IntEnum
+from player import Player
+
 
 class CellType(IntEnum):
     NEUTRAL = 0
@@ -21,3 +23,13 @@ class Cell:
         return self.pion == Pion.NONE and not (
             cell.owner == CellType.NEUTRAL and self.owner == id or cell.owner != CellType.NEUTRAL and cell.owner != id and self.owner != cell.owner
         )
+    def set_pion(self, pion):
+        self.pion = pion
+
+    def occupied_by(self, player: Player):
+        if player == Player.RED:
+            return self.pion == Pion.RED
+        elif player == Player.GREEN:
+            return self.pion == Pion.GREEN
+        else:
+            return False
