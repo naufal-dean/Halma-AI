@@ -290,11 +290,11 @@
        </property>
       </layout>
      </widget>
-      <widget class="QLabel" name="selectSizeTitle">
+      <widget class="QLabel" name="curPlayer">
       <property name="geometry">
        <rect>
-        <x>830</x>
-        <y>60</y>
+        <x>800</x>
+        <y>90</y>
         <width>231</width>
         <height>41</height>
        </rect>
@@ -306,7 +306,7 @@
        </font>
       </property>
       <property name="text">
-       <string>NOW: </string>
+       <string></string>
       </property>
       <property name="textFormat">
        <enum>Qt::AutoText</enum>

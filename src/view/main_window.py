@@ -73,6 +73,10 @@ class MainWindow(QMainWindow):
         self.initGameState(humanPlayer, boardSize)
         self.initBoardUI()
         self.changePage(PageIdx.IN_GAME)
+        if(self.gameState.act_player == Player.GREEN):
+            self.curPlayer.setText("GREEN'S TURN")
+        else:
+            self.curPlayer.setText("RED'S TURN")
 
     def quitGame(self):
         for idx in reversed(range(self.fields.count())):
@@ -103,6 +107,11 @@ class MainWindow(QMainWindow):
             else:
                 self.gameState.next_turn()
                 self.calculateAIMove()
+                if(self.gameState.act_player == Player.GREEN):
+                    self.curPlayer.setText("GREEN'S TURN")
+                else:
+                    self.curPlayer.setText("RED'S TURN")
+
             # update new active cell and new legal moves
             self.actCell = None
             self.legalMoves = []
