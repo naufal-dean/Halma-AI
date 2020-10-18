@@ -13,7 +13,6 @@ class Board:
         self.size = size
         self.count_finish_red = 0
         self.count_finish_green = 0
-        self.count_pion = 0
         self.gen_board()
         self.set_count_pion()
         self.child = 0 # Debug
@@ -54,23 +53,29 @@ class Board:
             self.cells.append(temp)
 
     def set_count_pion(self):
+        self.count_pion = 0
         for i in range(self.size//2, 0, -1):
             self.count_pion += i
 
     def go_everywhere(self, cell: Cell, possible_steps, s, original: Cell, id: int):
         steps = [(1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,1), (1,-1), (-1,-1)]
+        # Try all move (left, right, up, down, etc..)
         for step in steps:
             row = cell.row + step[0]
             col = cell.col + step[1]
-            # print(row, col)
+            # If feasible
             if row >= 0 and col >= 0 and row < self.size and col < self.size:
+                # Is it emptpy to put the pion?
                 if self[row, col].pion == Pion.NONE:
+                    # Do not repeat same move and do not put to stack
                     if cell == original and self[row, col].check(original, id) and (original, self[row, col]) not in possible_steps:
                         possible_steps.append((original, self[row, col]))
-                else:
+                else: # Try jump/skip to next empty cell
                     row = cell.row + step[0]*2
                     col = cell.col + step[1]*2
+                    # If feasible
                     if row >= 0 and col >= 0 and row < self.size and col < self.size:
+                        # Check empty and do not repeat same move
                         if self[row, col].check(original, id) and (original, self[row, col]) not in possible_steps:
                             possible_steps.append((original, self[row, col]))
                             s.append(self[row, col])
@@ -94,45 +99,40 @@ class Board:
         return possible_steps
 
     def apply_step(self, step: tuple):
+        # Pre-condition: step[0].pion != Pion.NONE and step[1].pion == Pion.NONE
+        # Win condition update
+        if step[0].pion == Pion.RED and step[0].owner != CellType.GREEN_HOUSE and step[1].owner == CellType.GREEN_HOUSE:
+            self.count_finish_red += 1
+        elif step[0].pion == Pion.GREEN and step[0].owner != CellType.RED_HOUSE and step[1].owner == CellType.RED_HOUSE:
+            self.count_finish_green += 1
+        # Apply step
         step[1].pion = step[0].pion
         step[0].pion = Pion.NONE
 
     def undo_step(self, step: tuple):
+        # Pre-condition: step[0].pion == Pion.NONE and step[1].pion != Pion.NONE
+        # Win condition update
+        if step[1].pion == Pion.RED and step[0].owner != CellType.GREEN_HOUSE and step[1].owner == CellType.GREEN_HOUSE:
+            self.count_finish_red -= 1
+        elif step[1].pion == Pion.GREEN and step[0].owner != CellType.RED_HOUSE and step[1].owner == CellType.RED_HOUSE:
+            self.count_finish_green -= 1
+        # Undo step
         step[0].pion = step[1].pion
         step[1].pion = Pion.NONE
 
 
     def terminal_test(self, depth: int, id: int, maxing: bool):
         delta = time.time() - self.timer
+        # Constraint check
         if depth == self.max_depth or self.max_time != -1 and delta > self.max_time:
             return None
+        # Switch player
         if not maxing:
             id = (id % 2) + 1
-        win = True
-        if id == Player.GREEN:
-            print("count finish green", self.count_finish_green)
-            if(self.count_finish_green < self.count_pion):
-                win = False
-            # for i in range(self.size//2, self.size):
-            #     for j in range(self.size*3//2-i-1, self.size):
-            #         win = self[i, j].pion == (id % 2) + 1
-            #         if not win:
-            #             break
-            #     if not win:
-            #         break
-        else:
-            print("count finish red", self.count_finish_red)
-            if(self.count_finish_red < self.count_pion):
-                win = False
-            # for i in range(self.size//2):
-            #     for j in range(self.size//2-i):
-            #         win = self[i, j].pion == (id % 2) + 1
-            #         if not win:
-            #             break
-            #     if not win:
-            #         break
-        if win:
+        # Win check
+        if self.count_finish_green == self.count_pion or self.count_finish_red == self.count_pion:
             return None
+        # Generate possible steps with DFS
         steps = self.gen_all_pos_steps(id)
         if not steps:
             return None
@@ -144,12 +144,14 @@ class Board:
         return self.minimax_rec(id, True, 0, None, -sys.maxsize, sys.maxsize)
 
     def init_step_cost(self, maxing: bool):
+        # Init step cost for max & min condition
         if maxing:
             return (-sys.maxsize, None)
         else:
             return (sys.maxsize, None)
 
     def optimize_step_cost(self, maxing: bool, osc1: tuple, osc2: tuple):
+        # Use random here for better performance
         if maxing:
             return osc1 if osc1[0] > osc2[0] or osc1[0] == osc2[0] and random.randint(1,2) == 1 else osc2
         else:
@@ -184,6 +186,8 @@ class Board:
         while steps:
             step = steps.pop()
             self.apply_step(step)
+            
+            # Apply minimax to current state
             res = self.minimax_rec(id, maxing, depth+1, step, a, b)
             opt_step_cost = self.optimize_step_cost(maxing, opt_step_cost, (res[0], step))
             
@@ -200,45 +204,32 @@ class Board:
         return opt_step_cost
 
     def legal_moves(self, row: int, col: int, id: int):
-        print(self.dfs_path(row, col, id))
         return self.dfs_path(row, col, id)
 
+    # Debug
     def play(self):
         try:
             for i in range(1000):
                 step = self.minimax(1)[1]
-                self.apply_step(step)
-                
-                if(step[0].owner != CellType.GREEN_HOUSE and step[1].owner == CellType.GREEN_HOUSE):
-                    self.count_finish_red += 1
-
-                print(step[0].row, step[0].col, step[1].row, step[1].col)
-                print(self.objective_function(1))
-                # print(self.child)
+                self.apply_step(step)                
                 self.print_matrix()
                 step = self.minimax(2)[1]
                 self.apply_step(step)
-
-                if(step[0].owner != CellType.RED_HOUSE and step[1].owner == CellType.RED_HOUSE):
-                    self.count_finish_green += 1
-
-                print(self.objective_function(2))
-                print(step[0].row, step[0].col, step[1].row, step[1].col)
-
                 self.print_matrix()
         except Exception:
             print("Game finished")
 
+    # Debug
     def print_matrix(self):
         for i in range(self.size):
             for j in range(self.size-1):
                 print(int(self[i, j].pion), end=" | ")
             print(int(self[i, -1].pion))
+        print()
 
 if __name__ == "__main__":
     board = Board(10, max_depth=1, max_time=1, prune=True)
-    print(board.count_pion)
-    # board.load_from_file("src/model/bad.txt")
+    # board.load_from_file("test.txt")
     board.print_matrix()
     board.play()
     board.print_matrix()
