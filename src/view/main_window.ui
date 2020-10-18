@@ -14,6 +14,9 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
    <widget class="QStackedWidget" name="stackedWidget">
     <property name="geometry">
      <rect>
@@ -23,21 +26,38 @@
       <height>811</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
+    </property>
     <widget class="QWidget" name="mainMenuPage">
+     <property name="styleSheet">
+      <string notr="true">border-image: url(&quot;resource/image/background.jpg&quot;) 0 0 0 0 stretch stretch;</string>
+     </property>
      <widget class="QLabel" name="mainTitle">
       <property name="geometry">
        <rect>
-        <x>450</x>
-        <y>190</y>
-        <width>231</width>
-        <height>41</height>
+        <x>330</x>
+        <y>160</y>
+        <width>471</width>
+        <height>71</height>
        </rect>
       </property>
       <property name="font">
        <font>
-        <family>Segoe UI Semibold</family>
+        <family>Courier New</family>
         <pointsize>30</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background: rgba(255, 255, 255, 0.8);
+border-image: none;
+font: 30pt &quot;Courier New&quot;;</string>
       </property>
       <property name="text">
        <string>Halma Game</string>
@@ -58,6 +78,11 @@
         <height>221</height>
        </rect>
       </property>
+      <property name="styleSheet">
+       <string notr="true">border-image: none;
+border: none;
+font: 20pt &quot;Courier New&quot;;</string>
+      </property>
       <property name="title">
        <string/>
       </property>
@@ -69,6 +94,12 @@
          <width>251</width>
          <height>81</height>
         </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background: rgb(255, 0, 0);
+color: #ffffff;
+border: 3px solid #000;
+border-radius: 30px;</string>
        </property>
        <property name="text">
         <string>Exit</string>
@@ -83,6 +114,15 @@
          <height>81</height>
         </rect>
        </property>
+       <property name="autoFillBackground">
+        <bool>false</bool>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background: rgb(170, 255, 0);
+border-radius: 30px;
+border: 3px solid #000;
+</string>
+       </property>
        <property name="text">
         <string>Play Game</string>
        </property>
@@ -90,20 +130,31 @@
      </widget>
     </widget>
     <widget class="QWidget" name="selectBoardSizeMenuPage">
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(255, 255, 127);</string>
+     </property>
      <widget class="QLabel" name="selectSizeTitle">
       <property name="geometry">
        <rect>
-        <x>450</x>
-        <y>150</y>
-        <width>231</width>
-        <height>41</height>
+        <x>310</x>
+        <y>100</y>
+        <width>521</width>
+        <height>91</height>
        </rect>
       </property>
       <property name="font">
        <font>
-        <family>Segoe UI Semibold</family>
-        <pointsize>13</pointsize>
+        <family>Courier New</family>
+        <pointsize>30</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background: none;
+border-image: none;
+font: 30pt &quot;Courier New&quot;;</string>
       </property>
       <property name="text">
        <string>Select Board Size</string>
@@ -124,6 +175,11 @@
         <height>321</height>
        </rect>
       </property>
+      <property name="styleSheet">
+       <string notr="true">background: none;
+border: none;
+font: 24pt &quot;Courier New&quot;;</string>
+      </property>
       <property name="title">
        <string/>
       </property>
@@ -135,6 +191,11 @@
          <width>251</width>
          <height>81</height>
         </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background: rgb(0, 255, 127);
+border: 3px solid #000;
+border-radius: 30px;</string>
        </property>
        <property name="text">
         <string>8 x 8</string>
@@ -149,6 +210,11 @@
          <height>81</height>
         </rect>
        </property>
+       <property name="styleSheet">
+        <string notr="true">background: rgb(0, 255, 255);
+border: 3px solid #000;
+border-radius: 30px;</string>
+       </property>
        <property name="text">
         <string>10 x 10</string>
        </property>
@@ -162,6 +228,12 @@
          <height>81</height>
         </rect>
        </property>
+       <property name="styleSheet">
+        <string notr="true">background: rgb(255, 85, 0);
+border: 3px solid #000;
+border-radius: 30px;
+color: #ffffff;</string>
+       </property>
        <property name="text">
         <string>16 x 16</string>
        </property>
@@ -169,14 +241,21 @@
      </widget>
     </widget>
     <widget class="QWidget" name="selectGameModeMenuPage">
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(170, 170, 255);</string>
+     </property>
      <widget class="QGroupBox" name="selectModeGroup">
       <property name="geometry">
        <rect>
-        <x>420</x>
+        <x>338</x>
         <y>260</y>
-        <width>299</width>
+        <width>441</width>
         <height>321</height>
        </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background: none;
+border: none;</string>
       </property>
       <property name="title">
        <string/>
@@ -186,9 +265,15 @@
         <rect>
          <x>20</x>
          <y>20</y>
-         <width>251</width>
+         <width>401</width>
          <height>81</height>
         </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgb(170, 255, 127), stop:1 rgb(255, 170, 255));
+border: 3px solid #000;
+border-radius: 30px;
+font: 10pt &quot;Courier New&quot;;</string>
        </property>
        <property name="text">
         <string>Human vs Bot Minimax</string>
@@ -199,9 +284,15 @@
         <rect>
          <x>20</x>
          <y>120</y>
-         <width>251</width>
+         <width>401</width>
          <height>81</height>
         </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgb(170, 255, 127), stop:1 rgb(170, 255, 255));
+border: 3px solid #000;
+border-radius: 30px;
+font: 10pt &quot;Courier New&quot;;</string>
        </property>
        <property name="text">
         <string>Human vs Bot Minimax with Local Search</string>
@@ -212,9 +303,15 @@
         <rect>
          <x>20</x>
          <y>220</y>
-         <width>251</width>
+         <width>401</width>
          <height>81</height>
         </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgb(255, 170, 255), stop:1 rgb(170, 255, 255));
+border: 3px solid #000;
+border-radius: 30px;
+font: 10pt &quot;Courier New&quot;;</string>
        </property>
        <property name="text">
         <string>Bot Minimax vs Bot Minimax Local Search</string>
@@ -224,17 +321,25 @@
      <widget class="QLabel" name="selectGameModeTitle">
       <property name="geometry">
        <rect>
-        <x>450</x>
-        <y>150</y>
-        <width>231</width>
-        <height>41</height>
+        <x>320</x>
+        <y>120</y>
+        <width>501</width>
+        <height>71</height>
        </rect>
       </property>
       <property name="font">
        <font>
-        <family>Segoe UI Semibold</family>
-        <pointsize>13</pointsize>
+        <family>Courier New</family>
+        <pointsize>30</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background: none;
+border-image: none;
+font: 30pt &quot;Courier New&quot;;</string>
       </property>
       <property name="text">
        <string>Select Game Mode</string>
@@ -248,20 +353,31 @@
      </widget>
     </widget>
     <widget class="QWidget" name="selectSideMenuPage">
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(170, 255, 255);</string>
+     </property>
      <widget class="QLabel" name="selectSideTitle">
       <property name="geometry">
        <rect>
-        <x>450</x>
-        <y>150</y>
-        <width>231</width>
-        <height>41</height>
+        <x>320</x>
+        <y>120</y>
+        <width>501</width>
+        <height>71</height>
        </rect>
       </property>
       <property name="font">
        <font>
-        <family>Segoe UI Semibold</family>
-        <pointsize>13</pointsize>
+        <family>Courier New</family>
+        <pointsize>30</pointsize>
+        <weight>50</weight>
+        <italic>false</italic>
+        <bold>false</bold>
        </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background: none;
+border-image: none;
+font: 30pt &quot;Courier New&quot;;</string>
       </property>
       <property name="text">
        <string>Select Your Side</string>
@@ -282,6 +398,11 @@
         <height>321</height>
        </rect>
       </property>
+      <property name="styleSheet">
+       <string notr="true">font: 12pt &quot;Courier New&quot;;
+background: none;
+border: none;</string>
+      </property>
       <property name="title">
        <string/>
       </property>
@@ -293,6 +414,12 @@
          <width>251</width>
          <height>81</height>
         </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background: rgb(170, 255, 0);
+border: 3px solid #000;
+border-radius: 30px;
+</string>
        </property>
        <property name="text">
         <string>Player Green</string>
@@ -307,6 +434,12 @@
          <height>81</height>
         </rect>
        </property>
+       <property name="styleSheet">
+        <string notr="true">background: rgb(255, 85, 127);
+border: 3px solid #000;
+border-radius: 30px;
+</string>
+       </property>
        <property name="text">
         <string>Player Red</string>
        </property>
@@ -320,6 +453,12 @@
          <height>81</height>
         </rect>
        </property>
+       <property name="styleSheet">
+        <string notr="true">background: rgb(255, 85, 0);
+border: 3px solid #000;
+border-radius: 30px;
+color: #ffffff;</string>
+       </property>
        <property name="text">
         <string>Back to Main Menu</string>
        </property>
@@ -327,6 +466,9 @@
      </widget>
     </widget>
     <widget class="QWidget" name="inGamePage">
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(85, 170, 255);</string>
+     </property>
      <widget class="QLabel" name="fieldsLabel">
       <property name="geometry">
        <rect>
