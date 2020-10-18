@@ -4,7 +4,7 @@ from .player import Player
 import sys, time, random
 
 class Board:
-    def __init__(self, size, max_depth=-1, max_time=-1, prune=False):
+    def __init__(self, size, max_depth=1, max_time=-1, prune=False):
         assert(size & 1 == 0)
         self.max_depth = max_depth
         self.max_time = max_time

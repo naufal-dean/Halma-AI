@@ -15,6 +15,10 @@ class PageIdx(IntEnum):
     SELECT_SIDE = 3
     IN_GAME = 4
 
+class GameMode(IntEnum):
+    HUMAN_MINIMAX = 1
+    HUMAN_LOCAL = 2
+    MINIMAX_LOCAL = 3
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -23,7 +27,7 @@ class MainWindow(QMainWindow):
         self.gameState = None
         self.actCell = None
         self.boardSize = 0
-        self.gameMode = ""
+        self.gameMode = 0
         self.legalMoves = []
         # change page helper
         self.changePage = lambda idx: self.stackedWidget.setCurrentIndex(idx)
@@ -40,9 +44,9 @@ class MainWindow(QMainWindow):
         self.sixteen.clicked.connect(lambda:self.setBoardSize(16))
 
         # select game mode paga
-        self.humanVsMinimax.clicked.connect(lambda:self.setGameMode("human vs minimax"))
-        self.humanVsLocalSearch.clicked.connect(lambda:self.setGameMode("human vs local search"))
-        self.minimaxVsLocalSearch.clicked.connect(lambda:self.setGameMode("minimax vs local search"))
+        self.humanVsMinimax.clicked.connect(lambda:self.setGameMode(GameMode.HUMAN_MINIMAX))
+        self.humanVsLocalSearch.clicked.connect(lambda:self.setGameMode(GameMode.HUMAN_LOCAL))
+        self.minimaxVsLocalSearch.clicked.connect(lambda:self.setGameMode(GameMode.MINIMAX_LOCAL))
         
         # select side page
         self.pRedBtn.clicked.connect(lambda: self.startGame(Player.RED, self.boardSize))
@@ -106,6 +110,7 @@ class MainWindow(QMainWindow):
         if self.actCell and (self.gameState.board[self.actCell[0], self.actCell[1]], self.gameState.board[r, c]) in self.legalMoves:  # moving pion
             # move pion
             self.gameState.board.apply_step((self.gameState.board[self.actCell[0], self.actCell[1]], self.gameState.board[r, c]))
+            
             self.updatePionPositionUI()
             # check winner
             winner = self.gameState.check_winner()
@@ -114,6 +119,7 @@ class MainWindow(QMainWindow):
             else:
                 self.gameState.next_turn()
                 self.calculateAIMove()
+                self.updatePionPositionUI()
                 if(self.gameState.act_player == Player.GREEN):
                     self.curPlayer.setText("GREEN'S TURN")
                 else:
@@ -146,12 +152,16 @@ class MainWindow(QMainWindow):
 
     # Game methods
     def initGameState(self, humanPlayer, boardSize):
-        board = Board(boardSize)
+        board = Board(boardSize, max_time=1)
         self.gameState = GameState(board, humanPlayer)
 
     def calculateAIMove(self):
-        # TODO: implement
-        pass
+        if self.gameState.hum_player == Pion.RED:
+                step = self.gameState.board.minimax(2)[1]
+                self.gameState.board.apply_step(step)
+        elif self.gameState.hum_player == Pion.GREEN:
+            step = self.gameState.board.minimax(1)[1]
+            self.gameState.board.apply_step(step)
 
     # Helper methods
     def spawnDialogWindow(self, title, text, subtext="", type="Information"):
