@@ -11,7 +11,11 @@ class Board:
         self.prune = False
         self.timer = 0
         self.size = size
+        self.count_finish_red = 0
+        self.count_finish_green = 0
+        self.count_pion = 0
         self.gen_board()
+        self.set_count_pion()
         self.child = 0 # Debug
 
     def load_from_file(self, filename):
@@ -27,7 +31,7 @@ class Board:
             return self.cells[index[0]][index[1]]
         except Exception:
             return None
-
+        
     def gen_board(self):
         self.cells = []
         for i in range(self.size):
@@ -48,6 +52,10 @@ class Board:
                     owner = CellType.GREEN_HOUSE
                 temp.append(Cell(owner, owner, i, j))
             self.cells.append(temp)
+
+    def set_count_pion(self):
+        for i in range(self.size//2, 0, -1):
+            self.count_pion += i
 
     def go_everywhere(self, cell: Cell, possible_steps, s, original: Cell, id: int):
         steps = [(1,0), (-1,0), (0,1), (0,-1), (1,1), (-1,1), (1,-1), (-1,-1)]
@@ -93,6 +101,7 @@ class Board:
         step[0].pion = step[1].pion
         step[1].pion = Pion.NONE
 
+
     def terminal_test(self, depth: int, id: int, maxing: bool):
         delta = time.time() - self.timer
         if depth == self.max_depth or self.max_time != -1 and delta > self.max_time:
@@ -101,21 +110,27 @@ class Board:
             id = (id % 2) + 1
         win = True
         if id == Player.GREEN:
-            for i in range(self.size//2, self.size):
-                for j in range(self.size*3//2-i-1, self.size):
-                    win = self[i, j].pion == (id % 2) + 1
-                    if not win:
-                        break
-                if not win:
-                    break
+            print("count finish green", self.count_finish_green)
+            if(self.count_finish_green < self.count_pion):
+                win = False
+            # for i in range(self.size//2, self.size):
+            #     for j in range(self.size*3//2-i-1, self.size):
+            #         win = self[i, j].pion == (id % 2) + 1
+            #         if not win:
+            #             break
+            #     if not win:
+            #         break
         else:
-            for i in range(self.size//2):
-                for j in range(self.size//2-i):
-                    win = self[i, j].pion == (id % 2) + 1
-                    if not win:
-                        break
-                if not win:
-                    break
+            print("count finish red", self.count_finish_red)
+            if(self.count_finish_red < self.count_pion):
+                win = False
+            # for i in range(self.size//2):
+            #     for j in range(self.size//2-i):
+            #         win = self[i, j].pion == (id % 2) + 1
+            #         if not win:
+            #             break
+            #     if not win:
+            #         break
         if win:
             return None
         steps = self.gen_all_pos_steps(id)
@@ -193,14 +208,23 @@ class Board:
             for i in range(1000):
                 step = self.minimax(1)[1]
                 self.apply_step(step)
+                
+                if(step[0].owner != CellType.GREEN_HOUSE and step[1].owner == CellType.GREEN_HOUSE):
+                    self.count_finish_red += 1
+
                 print(step[0].row, step[0].col, step[1].row, step[1].col)
                 print(self.objective_function(1))
                 # print(self.child)
                 self.print_matrix()
                 step = self.minimax(2)[1]
                 self.apply_step(step)
+
+                if(step[0].owner != CellType.RED_HOUSE and step[1].owner == CellType.RED_HOUSE):
+                    self.count_finish_green += 1
+
                 print(self.objective_function(2))
                 print(step[0].row, step[0].col, step[1].row, step[1].col)
+
                 self.print_matrix()
         except Exception:
             print("Game finished")
@@ -212,7 +236,8 @@ class Board:
             print(int(self[i, -1].pion))
 
 if __name__ == "__main__":
-    board = Board(16, max_depth=1, max_time=1, prune=True)
+    board = Board(10, max_depth=1, max_time=1, prune=True)
+    print(board.count_pion)
     # board.load_from_file("src/model/bad.txt")
     board.print_matrix()
     board.play()
