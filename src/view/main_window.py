@@ -13,7 +13,8 @@ class PageIdx(IntEnum):
     SELECT_SIZE = 1
     SELECT_MODE = 2
     SELECT_SIDE = 3
-    IN_GAME = 4
+    INPUT_MAX_TIME = 4
+    IN_GAME = 5
 
 class GameMode(IntEnum):
     HUMAN_MINIMAX = 1
@@ -33,6 +34,7 @@ class MainWindow(QMainWindow):
         self.changePage = lambda idx: self.stackedWidget.setCurrentIndex(idx)
         # setup ui
         self.setupUI()
+        self.currentPlayer = None
 
     def setupUI(self):
         # main menu page
@@ -49,12 +51,13 @@ class MainWindow(QMainWindow):
         self.minimaxVsLocalSearch.clicked.connect(lambda:self.setGameMode(GameMode.MINIMAX_LOCAL))
         
         # select side page
-        self.pRedBtn.clicked.connect(lambda: self.startGame(Player.RED, self.boardSize))
-        self.pGreenBtn.clicked.connect(lambda: self.startGame(Player.GREEN, self.boardSize))
+        self.pRedBtn.clicked.connect(lambda: self.setCurrentPlayer(Player.RED))
+        self.pGreenBtn.clicked.connect(lambda: self.setCurrentPlayer(Player.GREEN))
         self.mainMenuNavBtn.clicked.connect(lambda: self.changePage(PageIdx.MAIN_MENU))
+
+        # max time page
+        self.startGameButton.clicked.connect(lambda: self.startGame(self.currentPlayer, self.boardSize, self.maxTime.value()))
         
-
-
         # in game page
         self.quitGameBtn.clicked.connect(self.quitGame)
 
@@ -80,8 +83,8 @@ class MainWindow(QMainWindow):
                 button.setIcon(QIcon(icon_path))
 
     # Slot methods
-    def startGame(self, humanPlayer: Player, boardSize):
-        self.initGameState(humanPlayer, boardSize)
+    def startGame(self, humanPlayer: Player, boardSize :int, max_time :int):
+        self.initGameState(humanPlayer, boardSize, max_time)
         self.initBoardUI()
         self.changePage(PageIdx.IN_GAME)
         if(self.gameState.act_player == Player.GREEN):
@@ -150,18 +153,18 @@ class MainWindow(QMainWindow):
         self.gameMode = gameMode
         self.changePage(PageIdx.SELECT_SIDE)
 
+    def setCurrentPlayer(self, currentPlayer):
+        self.currentPlayer = currentPlayer
+        self.changePage(PageIdx.INPUT_MAX_TIME)
+
     # Game methods
-    def initGameState(self, humanPlayer, boardSize):
-        board = Board(boardSize, max_time=1)
+    def initGameState(self, humanPlayer, boardSize, max_time):
+        board = Board(boardSize, max_time=max_time)
         self.gameState = GameState(board, humanPlayer)
 
     def calculateAIMove(self):
-        if self.gameState.hum_player == Pion.RED:
-                step = self.gameState.board.minimax(2)[1]
-                self.gameState.board.apply_step(step)
-        elif self.gameState.hum_player == Pion.GREEN:
-            step = self.gameState.board.minimax(1)[1]
-            self.gameState.board.apply_step(step)
+        step = self.gameState.board.minimax(self.gameState.act_player)[1]
+        self.gameState.board.apply_step(step)
 
     # Helper methods
     def spawnDialogWindow(self, title, text, subtext="", type="Information"):
