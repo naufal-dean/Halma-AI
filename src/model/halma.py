@@ -2,14 +2,16 @@ from collections import deque
 from .cell import Cell, CellType, Pion
 from .player import Player
 import sys, time, random
+import numpy as np
 
 class Board:
-    def __init__(self, size, max_depth=1, max_time=-1, prune=False):
+    def __init__(self, size, max_depth=1, max_time=-1, prune=True):
         assert(size & 1 == 0)
         self.max_depth = max_depth
         self.max_time = max_time
         self.prune = False
         self.timer = 0
+        self.cost = 0
         self.size = size
         self.count_finish_red = 0
         self.count_finish_green = 0
@@ -27,19 +29,16 @@ class Board:
 
     def __getitem__(self, index):
         try:
-            return self.cells[index[0]][index[1]]
+            return self.cells[index[0], index[1]]
         except Exception:
             return None
         
     def gen_board(self):
-        self.cells = []
+        self.cells = np.empty((self.size, self.size), dtype=Cell)
         for i in range(self.size):
-            temp = []
-
             # Contraint number
             d_size = self.size//2
             c = (d_size-i-1) % self.size
-
             # Gen row
             for j in range(self.size):
                 owner = CellType.NEUTRAL
@@ -49,8 +48,7 @@ class Board:
                 # Bottom-right side
                 elif c >= d_size and j >= c:
                     owner = CellType.GREEN_HOUSE
-                temp.append(Cell(owner, owner, i, j))
-            self.cells.append(temp)
+                self.cells[i, j] = Cell(owner, owner, i, j)
 
     def set_count_pion(self):
         self.count_pion = 0
@@ -100,22 +98,30 @@ class Board:
 
     def apply_step(self, step: tuple):
         # Pre-condition: step[0].pion != Pion.NONE and step[1].pion == Pion.NONE
-        # Win condition update
-        if step[0].pion == Pion.RED and step[0].owner != CellType.GREEN_HOUSE and step[1].owner == CellType.GREEN_HOUSE:
-            self.count_finish_red += 1
-        elif step[0].pion == Pion.GREEN and step[0].owner != CellType.RED_HOUSE and step[1].owner == CellType.RED_HOUSE:
-            self.count_finish_green += 1
+        # Win condition update + cost update
+        if step[0].pion == Pion.RED:
+            self.cost -= (self.size - step[0].row -1) + (self.size - step[0].col -1)
+            self.cost += (self.size - step[1].row -1) + (self.size - step[1].col -1)
+            self.count_finish_red += step[0].owner != CellType.GREEN_HOUSE and step[1].owner == CellType.GREEN_HOUSE
+        elif step[0].pion == Pion.GREEN:
+            self.cost += step[0].row + step[0].col
+            self.cost -= step[1].row + step[1].col
+            self.count_finish_green += step[0].owner != CellType.RED_HOUSE and step[1].owner == CellType.RED_HOUSE
         # Apply step
         step[1].pion = step[0].pion
         step[0].pion = Pion.NONE
 
     def undo_step(self, step: tuple):
         # Pre-condition: step[0].pion == Pion.NONE and step[1].pion != Pion.NONE
-        # Win condition update
-        if step[1].pion == Pion.RED and step[0].owner != CellType.GREEN_HOUSE and step[1].owner == CellType.GREEN_HOUSE:
-            self.count_finish_red -= 1
-        elif step[1].pion == Pion.GREEN and step[0].owner != CellType.RED_HOUSE and step[1].owner == CellType.RED_HOUSE:
-            self.count_finish_green -= 1
+        # Win condition update + cost update
+        if step[1].pion == Pion.RED:
+            self.cost += (self.size - step[0].row -1) + (self.size - step[0].col -1)
+            self.cost -= (self.size - step[1].row -1) + (self.size - step[1].col -1)
+            self.count_finish_red -= step[0].owner != CellType.GREEN_HOUSE and step[1].owner == CellType.GREEN_HOUSE
+        elif step[1].pion == Pion.GREEN:
+            self.cost -= step[0].row + step[0].col
+            self.cost += step[1].row + step[1].col
+            self.count_finish_green -= step[0].owner != CellType.RED_HOUSE and step[1].owner == CellType.RED_HOUSE
         # Undo step
         step[0].pion = step[1].pion
         step[1].pion = Pion.NONE
@@ -158,23 +164,11 @@ class Board:
             return osc1 if osc1[0] < osc2[0] or osc1[0] == osc2[0] and random.randint(1,2) == 1 else osc2
 
     def objective_function(self, id: int):
-        total = [0, 0]
-        for row in range(self.size):
-            for col in range(self.size):
-                if self[row, col].pion == Pion.RED:
-                    # if self[row, col].owner == (id%2)+1:
-                    #     total[0] -= 5
-                    # else:
-                        total[0] += (self.size-row-1) + (self.size-col-1)
-                        # temp = self.size**2
-                        # for i in range(self.size//2, self.size):
-                        #     for j in range(self.size//2+i-1, self.size):
-                        #         if self[i, j].pion == 0:
-                        #             temp = min(temp, abs(i-row-1) + abs(j-col-1))
-                        # total[0] += temp
-                elif self[row, col].pion == Pion.GREEN:
-                    total[1] += row + col
-        return - total[id-1] + total[(id%2)]
+        # Use pre-compute cost (more cheap)
+        total = self.cost
+        if id == Pion.RED:
+            total *= -1
+        return total
 
     def minimax_rec(self, id: int, maxing: bool, depth: int, step: tuple, a: int, b: int):
         self.child += 1
@@ -188,7 +182,7 @@ class Board:
             self.apply_step(step)
             
             # Apply minimax to current state
-            res = self.minimax_rec(id, maxing, depth+1, step, a, b)
+            res = self.minimax_rec(id, not maxing, depth+1, step, a, b)
             opt_step_cost = self.optimize_step_cost(maxing, opt_step_cost, (res[0], step))
             
             self.undo_step(step)
@@ -210,11 +204,14 @@ class Board:
     def play(self):
         try:
             for i in range(1000):
+                x = time.time()
                 step = self.minimax(1)[1]
                 self.apply_step(step)                
+                print(self.child, time.time()-x)
                 self.print_matrix()
                 step = self.minimax(2)[1]
                 self.apply_step(step)
+                print(self.child, time.time()-x)
                 self.print_matrix()
         except Exception:
             print("Game finished")
@@ -228,7 +225,7 @@ class Board:
         print()
 
 if __name__ == "__main__":
-    board = Board(10, max_depth=1, max_time=1, prune=True)
+    board = Board(16, max_depth=2, max_time=-1, prune=True)
     # board.load_from_file("test.txt")
     board.print_matrix()
     board.play()
