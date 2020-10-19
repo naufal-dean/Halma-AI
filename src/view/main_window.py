@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from .worker import Worker
 from model import *
 
 
@@ -34,7 +35,11 @@ class MainWindow(QMainWindow):
         self.changePage = lambda idx: self.stackedWidget.setCurrentIndex(idx)
         # setup ui
         self.setupUI()
-        self.currentPlayer = None
+        self.humanPlayer = None
+        # multithreader
+        self.threadPool = QThreadPool()
+        self.workerMinimax = None
+        self.workerLocal = None
 
     def setupUI(self):
         # main menu page
@@ -44,20 +49,16 @@ class MainWindow(QMainWindow):
         self.eight.clicked.connect(lambda:self.setBoardSize(8))
         self.ten.clicked.connect(lambda:self.setBoardSize(10))
         self.sixteen.clicked.connect(lambda:self.setBoardSize(16))
-
         # select game mode paga
         self.humanVsMinimax.clicked.connect(lambda:self.setGameMode(GameMode.HUMAN_MINIMAX))
         self.humanVsLocalSearch.clicked.connect(lambda:self.setGameMode(GameMode.HUMAN_LOCAL))
         self.minimaxVsLocalSearch.clicked.connect(lambda:self.setGameMode(GameMode.MINIMAX_LOCAL))
-
         # select side page
-        self.pRedBtn.clicked.connect(lambda: self.setCurrentPlayer(Player.RED))
-        self.pGreenBtn.clicked.connect(lambda: self.setCurrentPlayer(Player.GREEN))
+        self.pRedBtn.clicked.connect(lambda: self.setHumanPlayer(Player.RED))
+        self.pGreenBtn.clicked.connect(lambda: self.setHumanPlayer(Player.GREEN))
         self.mainMenuNavBtn.clicked.connect(lambda: self.changePage(PageIdx.MAIN_MENU))
-
         # max time page
-        self.startGameButton.clicked.connect(lambda: self.startGame(self.currentPlayer, self.boardSize, self.maxTime.value()))
-
+        self.startGameButton.clicked.connect(lambda: self.startGame(self.humanPlayer, self.boardSize, self.maxTime.value()))
         # in game page
         quitConfirmation = lambda btn: self.quitGame() if btn.text() == "Yes" else None
         self.quitGameBtn.clicked.connect(lambda: self.spawnDialogWindow("Quit Game",
@@ -99,8 +100,8 @@ class MainWindow(QMainWindow):
             def restartOrQuitGame(btn):
                 self.quitGame()
                 if btn.text() == "Yes":
-                    self.startGame(self.currentPlayer, self.boardSize, self.maxTime.value())
-
+                    self.startGame(self.humanPlayer, self.boardSize, self.maxTime.value())
+            # spawn winner window
             self.spawnDialogWindow("Game Ended", "The Winner is Player " + winner.name,
                                    subtext="Restart Game?", callback=restartOrQuitGame)
             return True
@@ -111,20 +112,36 @@ class MainWindow(QMainWindow):
         self.initGameState(humanPlayer, boardSize, max_time)
         self.initBoardUI()
         self.changePage(PageIdx.IN_GAME)
-        # AI move first act_player is not hum_player
-        if self.gameState.act_player != self.gameState.hum_player:
-            # AI move
-            self.calculateAIMove()
-            self.updatePionPositionUI()
-            # check if AI win
-            if self.checkWinnerUI(): return
-            # next turn: human move
-            self.gameState.next_turn()
-            self.updatePlayerTurnUI()
+        if self.gameMode == GameMode.MINIMAX_LOCAL:  # AI vs AI
+            self.calculateAIMoveMinimax()
+        elif self.gameMode == GameMode.HUMAN_LOCAL:  # Human vs AI local
+            # AI move first not hum_player
+            if self.gameState.act_player != self.gameState.hum_player:
+                self.calculateAIMoveLocal()
+        else:  # self.gameMode == GameMode.HUMAN_MINIMAX  # Human vs AI local
+            # AI move first not hum_player
+            if self.gameState.act_player != self.gameState.hum_player:
+                self.calculateAIMoveMinimax()
 
     def quitGame(self):
         for idx in reversed(range(self.fields.count())):
             self.fields.itemAt(idx).widget().setParent(None)
+        # disconnect worker signal
+        if self.workerMinimax is not None:
+            try:
+                self.workerMinimax.signals.exception.disconnect(self.minimaxThreadException)
+                self.workerMinimax.signals.result.disconnect(self.minimaxThreadResult)
+                self.workerMinimax.signals.done.disconnect(self.minimaxThreadDone)
+            except Exception as e:
+                pass
+        if self.workerLocal is not None:
+            try:
+                self.workerLocal.signals.exception.disconnect(self.minimaxThreadException)
+                self.workerLocal.signals.result.disconnect(self.minimaxThreadResult)
+                self.workerLocal.signals.done.disconnect(self.minimaxThreadDone)
+            except Exception as e:
+                pass
+        # clean game state and return to main menu
         self.gameState = None
         self.changePage(PageIdx.MAIN_MENU)
 
@@ -153,17 +170,16 @@ class MainWindow(QMainWindow):
             self.gameState.next_turn()
             self.updatePlayerTurnUI()
             # calculate AI move
-            self.calculateAIMove()
-            self.updatePionPositionUI()
-            # check if AI win
-            if self.checkWinnerUI(): return
-            # next turn: human move
-            self.gameState.next_turn()
-            self.updatePlayerTurnUI()
+            if self.gameMode == GameMode.HUMAN_LOCAL:
+                self.calculateAIMoveLocal()
+            else:  # self.gameMode == GameMode.HUMAN_MINIMAX
+                self.calculateAIMoveMinimax()
         else:  # selecting pion
             # pion check if existing and owned
             cell = self.gameState.board[r, c]
-            if not cell.occupied_by(self.gameState.hum_player):
+            if (not cell.occupied_by(self.gameState.hum_player)
+                or self.gameState.act_player != self.gameState.hum_player
+                or self.gameMode == GameMode.MINIMAX_LOCAL):
                 highlightBtn(button, "none"); self.actCell = None; self.legalMoves = []; return;
             # update new active cell and new legal moves
             self.actCell = (r, c)
@@ -180,10 +196,13 @@ class MainWindow(QMainWindow):
 
     def setGameMode(self, gameMode):
         self.gameMode = gameMode
-        self.changePage(PageIdx.SELECT_SIDE)
+        if self.gameMode == GameMode.MINIMAX_LOCAL:
+            self.setHumanPlayer(None)
+        else:
+            self.changePage(PageIdx.SELECT_SIDE)
 
-    def setCurrentPlayer(self, currentPlayer):
-        self.currentPlayer = currentPlayer
+    def setHumanPlayer(self, humanPlayer):
+        self.humanPlayer = humanPlayer
         self.changePage(PageIdx.INPUT_MAX_TIME)
 
     # Game methods
@@ -191,9 +210,50 @@ class MainWindow(QMainWindow):
         board = Board(boardSize, max_time=max_time)
         self.gameState = GameState(board, humanPlayer)
 
-    def calculateAIMove(self):
-        step = self.gameState.board.minimax(self.gameState.act_player)[1]
+    def calculateAIMoveMinimax(self):
+        print('ai move minimax')
+        # Create worker instance
+        self.workerMinimax = Worker(self.gameState.board.minimax, self.gameState.act_player)
+        # Connect signals
+        self.workerMinimax.signals.exception.connect(self.minimaxThreadException)
+        self.workerMinimax.signals.result.connect(self.minimaxThreadResult)
+        self.workerMinimax.signals.done.connect(self.minimaxThreadDone)
+        # Run thread
+        self.threadPool.start(self.workerMinimax)
+
+    def calculateAIMoveLocal(self):
+        print('ai move local')
+        # Create worker instance
+        # TODO: change to local search + minimax
+        self.workerLocal = Worker(self.gameState.board.minimax, self.gameState.act_player)
+        # Connect signals
+        self.workerLocal.signals.exception.connect(self.minimaxThreadException)
+        self.workerLocal.signals.result.connect(self.minimaxThreadResult)
+        self.workerLocal.signals.done.connect(self.minimaxThreadDone)
+        # Run thread
+        self.threadPool.start(self.workerLocal)
+
+    def minimaxThreadException(self, exception):
+        print(exception)
+
+    def minimaxThreadResult(self, res):
+        step = res[1]
         self.gameState.board.apply_step(step)
+        self.updatePionPositionUI()
+
+    def minimaxThreadDone(self):
+        print("AI move calculation done")
+        # check if AI win
+        if self.checkWinnerUI(): return
+        # next turn: human move
+        self.gameState.next_turn()
+        self.updatePlayerTurnUI()
+        # next AI player if AI vs AI, else return control to human
+        if self.gameMode == GameMode.MINIMAX_LOCAL:
+            if self.gameState.act_player == Player.GREEN:
+                self.calculateAIMoveLocal()
+            else:
+                self.calculateAIMoveMinimax()
 
     # Helper methods
     def spawnDialogWindow(self, title, text, yesBtnLbl="Yes", noBtnLbl="No",

@@ -30,7 +30,7 @@ class Board:
             return self.cells[index[0]][index[1]]
         except Exception:
             return None
-        
+
     def gen_board(self):
         self.cells = []
         for i in range(self.size):
@@ -186,11 +186,11 @@ class Board:
         while steps:
             step = steps.pop()
             self.apply_step(step)
-            
+
             # Apply minimax to current state
-            res = self.minimax_rec(id, maxing, depth+1, step, a, b)
+            res = self.minimax_rec(id, not maxing, depth+1, step, a, b)
             opt_step_cost = self.optimize_step_cost(maxing, opt_step_cost, (res[0], step))
-            
+
             self.undo_step(step)
             # Pruning
             if self.prune:
@@ -198,7 +198,7 @@ class Board:
                     a = a if a >= res[0] else res[0]
                 else:
                     b = b if b <= res[0] else res[0]
-                
+
                 if a >= b:
                     break
         return opt_step_cost
@@ -211,7 +211,7 @@ class Board:
         try:
             for i in range(1000):
                 step = self.minimax(1)[1]
-                self.apply_step(step)                
+                self.apply_step(step)
                 self.print_matrix()
                 step = self.minimax(2)[1]
                 self.apply_step(step)
