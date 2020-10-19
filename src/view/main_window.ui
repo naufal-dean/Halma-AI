@@ -697,7 +697,7 @@ font: 30pt &quot;Candara&quot;;</string>
     </widget>
     <widget class="QWidget" name="inGamePage">
      <property name="styleSheet">
-       <string notr="true">background-image: url(&quot;resource/image/White-background.jpg&quot;) 0 0 0 0 stretch stretch;</string>
+       <string notr="true">background-color: rgb(50, 170, 250);</string>
      </property>
      <widget class="QLabel" name="fieldsLabel">
       <property name="geometry">
