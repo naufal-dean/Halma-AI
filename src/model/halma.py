@@ -1,7 +1,7 @@
 from collections import deque
 from .cell import Cell, CellType, Pion
 from .player import Player
-import sys, time, random
+import math, sys, time, random
 import numpy as np
 
 class Board:
@@ -20,7 +20,7 @@ class Board:
         self.child = 0 # Debug
 
     def load_from_file(self, filename):
-        d = open(filename, "r").read().split("\n")
+        d = open(filename, "r").read().split("\n")[:self.size]
         assert(len(d) == self.size)
         for i in range(len(d)):
             a = d[i].split(" | ")
@@ -144,11 +144,6 @@ class Board:
             return None
         return steps
 
-    def minimax(self, id: int):
-        self.timer = time.time()
-        self.child = 0
-        return self.minimax_rec(id, True, 0, None, -sys.maxsize, sys.maxsize)
-
     def init_step_cost(self, maxing: bool):
         # Init step cost for max & min condition
         if maxing:
@@ -169,6 +164,16 @@ class Board:
         if id == Pion.RED:
             total *= -1
         return total
+
+    def legal_moves(self, row: int, col: int, id: int):
+        return self.dfs_path(row, col, id)
+
+    # minimax algorithm
+    def minimax(self, id: int):
+        self.max_depth = 3
+        self.timer = time.time()
+        self.child = 0
+        return self.minimax_rec(id, True, 0, None, -sys.maxsize, sys.maxsize)
 
     def minimax_rec(self, id: int, maxing: bool, depth: int, step: tuple, a: int, b: int):
         self.child += 1
@@ -197,8 +202,63 @@ class Board:
                     break
         return opt_step_cost
 
-    def legal_moves(self, row: int, col: int, id: int):
-        return self.dfs_path(row, col, id)
+    # minimax_with_local algorithm (local search using simulated annealing)
+    # sample_div: max loop in each minimax level == max(sample_min, len(steps) // sample_div)
+    def minimax_with_local(self, id: int, anneal_threshold: float = 0.8,
+                           sample_min: int = 25, sample_div: float = 1.5):
+        assert 0 <= anneal_threshold <= 1
+        self.max_depth = 3
+        self.timer = time.time()
+        self.child = 0
+        self.sample_min = sample_min
+        self.sample_div = sample_div
+        return self.minimax_with_local_rec(id, True, 0, None, -sys.maxsize, sys.maxsize, anneal_threshold)
+
+    def minimax_with_local_rec(self, id: int, maxing: bool, depth: int, step: tuple, a: int, b: int, anneal_threshold: float):
+        self.child += 1
+        steps = self.terminal_test(depth, id, maxing)
+        if steps is None:
+            return (self.objective_function(id), step)
+        max_iter = max(min(self.sample_min, len(steps)), math.floor(len(steps) / self.sample_div))
+        steps = deque(random.sample(steps, max_iter))
+        T = len(steps)
+
+        opt_step_cost = self.init_step_cost(maxing)
+        while steps:
+            step = steps.pop()
+            self.apply_step(step)
+
+            # Apply minimax_with_local to current state
+            res = self.minimax_with_local_rec(id, not maxing, depth+1, step, a, b, anneal_threshold)
+            # change current, using annealing
+            if maxing:
+                dE = res[0] - opt_step_cost[0]
+                if dE > 0:
+                    opt_step_cost = (res[0], step)
+                else:
+                    if math.exp(dE / T) > anneal_threshold:
+                        opt_step_cost = (res[0], step)
+            else:
+                dE = res[0] - opt_step_cost[0]
+                if dE < 0:
+                    opt_step_cost = (res[0], step)
+                else:
+                    if math.exp(- dE / T) > anneal_threshold:
+                        opt_step_cost = (res[0], step)
+
+            self.undo_step(step)
+            # Pruning
+            if self.prune:
+                if maxing:
+                    a = a if a >= res[0] else res[0]
+                else:
+                    b = b if b <= res[0] else res[0]
+
+                if a >= b:
+                    break
+            # update temperature
+            T -= 1
+        return opt_step_cost
 
     # Debug
     def play(self):
@@ -206,14 +266,15 @@ class Board:
             for i in range(1000):
                 x = time.time()
                 step = self.minimax(1)[1]
-                self.apply_step(step)                
+                self.apply_step(step)
                 print(self.child, time.time()-x)
-                self.print_matrix()
+                # self.print_matrix()
                 step = self.minimax(2)[1]
                 self.apply_step(step)
                 print(self.child, time.time()-x)
-                self.print_matrix()
-        except Exception:
+                # self.print_matrix()
+        except Exception as e:
+            print(e)
             print("Game finished")
 
     # Debug

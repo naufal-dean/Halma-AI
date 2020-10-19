@@ -225,7 +225,7 @@ class MainWindow(QMainWindow):
         print('ai move local')
         # Create worker instance
         # TODO: change to local search + minimax
-        self.workerLocal = Worker(self.gameState.board.minimax, self.gameState.act_player)
+        self.workerLocal = Worker(self.gameState.board.minimax_with_local, self.gameState.act_player)
         # Connect signals
         self.workerLocal.signals.exception.connect(self.minimaxThreadException)
         self.workerLocal.signals.result.connect(self.minimaxThreadResult)
@@ -237,12 +237,11 @@ class MainWindow(QMainWindow):
         print(exception)
 
     def minimaxThreadResult(self, res):
+        if res is None:
+            print("No move available"); return
         step = res[1]
         self.gameState.board.apply_step(step)
         self.updatePionPositionUI()
-
-    def minimaxThreadDone(self):
-        print("AI move calculation done")
         # check if AI win
         if self.checkWinnerUI(): return
         # next turn: human move
@@ -254,6 +253,9 @@ class MainWindow(QMainWindow):
                 self.calculateAIMoveLocal()
             else:
                 self.calculateAIMoveMinimax()
+
+    def minimaxThreadDone(self):
+        print("AI move calculation done")
 
     # Helper methods
     def spawnDialogWindow(self, title, text, yesBtnLbl="Yes", noBtnLbl="No",
