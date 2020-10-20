@@ -1,4 +1,4 @@
-from .halma import Board
+from controller.halma import Board
 from .cell import Pion
 from .player import Player
 

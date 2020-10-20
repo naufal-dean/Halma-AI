@@ -1,6 +1,6 @@
 from collections import deque
-from .cell import Cell, CellType, Pion
-from .player import Player
+from model.cell import Cell, CellType, Pion
+from model.player import Player
 import math, sys, time, random
 import numpy as np
 

@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import *
 
 from .worker import Worker
 from model import *
-
+from controller import *
 
 class PageIdx(IntEnum):
     MAIN_MENU = 0

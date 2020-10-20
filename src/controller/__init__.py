@@ -1,0 +1,1 @@
+from .halma import Board
