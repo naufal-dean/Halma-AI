@@ -632,23 +632,23 @@ font: 30px &quot;Candara&quot;
       <widget class="QDoubleSpinBox" name="maxTime">
        <property name="geometry">
         <rect>
-         <x>60</x>
+         <x>120</x>
          <y>40</y>
-         <width>171</width>
+         <width>71</width>
          <height>50</height>
         </rect>
        </property>
        <property name="decimals">
-        <number>6</number>
+        <number>1</number>
        </property>
        <property name="minimum">
-        <double>0.1</double>
+        <double>0.100000000000000</double>
        </property>
        <property name="singleStep">
-        <double>0.1</double>
+        <double>0.100000000000000</double>
        </property>
        <property name="value">
-        <double>0.1</double>
+        <double>0.100000000000000</double>
        </property>
       </widget>
      </widget>
