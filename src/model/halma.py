@@ -210,18 +210,26 @@ class Board:
         self.max_depth = 3
         self.timer = time.time()
         self.child = 0
-        self.sample_min = sample_min
-        self.sample_div = sample_div
-        return self.minimax_with_local_rec(id, True, 0, None, -sys.maxsize, sys.maxsize, anneal_threshold)
+        return self.minimax_with_local_rec(id, True, 0, None, -sys.maxsize, sys.maxsize)
 
-    def minimax_with_local_rec(self, id: int, maxing: bool, depth: int, step: tuple, a: int, b: int, anneal_threshold: float):
+
+
+    def minimax_with_local_rec(self, id: int, maxing: bool, depth: int, step: tuple, a: int, b: int):
         self.child += 1
-        steps = self.terminal_test(depth, id, maxing)
-        if steps is None:
-            return (self.objective_function(id), step)
-        max_iter = max(min(self.sample_min, len(steps)), math.floor(len(steps) / self.sample_div))
-        steps = deque(random.sample(steps, max_iter))
-        T = len(steps)
+        parent_a = self.terminal_test(depth, id, maxing)
+        if parent_a is None:
+            return (self.objective_function(id), parent_a)
+        parent_b = self.terminal_test(depth, id, not maxing)
+        if parent_b is None:
+            return (self.objective_function(id), parent_b)
+        offspring = deque()
+        for i in range(len(parent_a) if len(parent_a) <= len(parent_b) else len(parent_b)):
+            if parent_a:
+                offspring.append(parent_a.pop())
+            if parent_b:
+                offspring.append(parent_b.pop())
+        steps = offspring
+
 
         opt_step_cost = self.init_step_cost(maxing)
         while steps:
@@ -229,23 +237,8 @@ class Board:
             self.apply_step(step)
 
             # Apply minimax_with_local to current state
-            res = self.minimax_with_local_rec(id, not maxing, depth+1, step, a, b, anneal_threshold)
-            # change current, using annealing
-            if maxing:
-                dE = res[0] - opt_step_cost[0]
-                if dE > 0:
-                    opt_step_cost = (res[0], step)
-                else:
-                    if math.exp(dE / T) > anneal_threshold:
-                        opt_step_cost = (res[0], step)
-            else:
-                dE = res[0] - opt_step_cost[0]
-                if dE < 0:
-                    opt_step_cost = (res[0], step)
-                else:
-                    if math.exp(- dE / T) > anneal_threshold:
-                        opt_step_cost = (res[0], step)
-
+            res = self.minimax_with_local_rec(id, not maxing, depth+1, step, a, b)
+            opt_step_cost = (res[0], step)
             self.undo_step(step)
             # Pruning
             if self.prune:
@@ -256,8 +249,6 @@ class Board:
 
                 if a >= b:
                     break
-            # update temperature
-            T -= 1
         return opt_step_cost
 
     # Debug
