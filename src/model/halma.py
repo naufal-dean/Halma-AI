@@ -19,13 +19,21 @@ class Board:
         self.set_count_pion()
         self.child = 0 # Debug
 
+    # Debug
     def load_from_file(self, filename):
         d = open(filename, "r").read().split("\n")[:self.size]
         assert(len(d) == self.size)
         for i in range(len(d)):
             a = d[i].split(" | ")
+            d_size = self.size//2
+            c = (d_size-i-1) % self.size
             for j in range(len(a)):
-                self.cells[i][j].pion = int(a[j])
+                a[j] = int(a[j])
+                if c < d_size and j <= c:
+                    self.count_finish_green += a[j] == Player.GREEN
+                elif c >= d_size and j >= c:
+                    self.count_finish_red += a[j] == Player.RED
+                self.cells[i][j].pion = a[j]
 
     def __getitem__(self, index):
         try:
@@ -90,10 +98,28 @@ class Board:
 
     def gen_all_pos_steps(self, id: int):
         possible_steps = deque()
+        stuck = 0
         for row in range(self.size):
+            d_size = self.size//2
+            c = (d_size-row-1) % self.size
             for col in range(self.size):
                 if self[row, col].pion == id:
-                    possible_steps.extend(self.dfs_path(row, col, id))
+                    # Generate step for a certain pion
+                    steps = self.dfs_path(row, col, id)
+
+                    # Check if stuck (no possible step for a certain pion)
+                    if not steps:
+                        # Check if the player's pion stuck in its own house
+                        stuck += (id == Player.GREEN and c >= d_size and col >= c) or (id == Player.RED and c < d_size and col <= c)
+                    possible_steps.extend(steps)
+
+        # Check if house is full with player's stuck pion + enemy's pion
+        # If yes, it's draw so return None
+        if (
+            id == Player.GREEN and stuck == self.count_pion-self.count_finish_red or
+            id == Player.RED and stuck == self.count_pion-self.count_finish_green
+        ):
+            return None
         return possible_steps
 
     def apply_step(self, step: tuple):

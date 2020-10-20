@@ -108,7 +108,7 @@ class MainWindow(QMainWindow):
         return False
 
     # Slot methods
-    def startGame(self, humanPlayer: Player, boardSize :int, max_time :int):
+    def startGame(self, humanPlayer: Player, boardSize :int, max_time :float):
         self.initGameState(humanPlayer, boardSize, max_time)
         self.initBoardUI()
         self.changePage(PageIdx.IN_GAME)
