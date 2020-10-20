@@ -1,4 +1,5 @@
 import os
+import time
 from enum import IntEnum
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import *
@@ -40,6 +41,10 @@ class MainWindow(QMainWindow):
         self.threadPool = QThreadPool()
         self.workerMinimax = None
         self.workerLocal = None
+        # timer
+        self.timerStart = 0
+        self.timerMinimax = 0
+        self.timerLocal = 0
 
     def setupUI(self):
         # main menu page
@@ -102,7 +107,13 @@ class MainWindow(QMainWindow):
                 if btn.text() == "Yes":
                     self.startGame(self.humanPlayer, self.boardSize, self.maxTime.value())
             # spawn winner window
-            self.spawnDialogWindow("Game Ended", "The Winner is Player " + winner.name,
+            if self.gameMode == GameMode.HUMAN_MINIMAX:
+                timeRecap = "Time Needed by Minimax Bot = " + str(self.timerMinimax) + " s."
+            elif self.gameMode == GameMode.HUMAN_LOCAL:
+                timeRecap = "Time Needed by Local Bot = " + str(self.timerLocal) + " s."
+            else:
+                timeRecap = "Time Needed by Minimax Bot = " + str(self.timerMinimax) + " s and Local Bot = " + str(self.timerLocal) + " s."
+            self.spawnDialogWindow("Game Ended", "The Winner is Player " + winner.name + ". " + timeRecap,
                                    subtext="Restart Game?", callback=restartOrQuitGame)
             return True
         return False
@@ -112,6 +123,8 @@ class MainWindow(QMainWindow):
         self.initGameState(humanPlayer, boardSize, max_time)
         self.initBoardUI()
         self.changePage(PageIdx.IN_GAME)
+        self.timerMinimax = 0
+        self.timerLocal = 0
         if self.gameMode == GameMode.MINIMAX_LOCAL:  # AI vs AI
             self.calculateAIMoveMinimax()
         elif self.gameMode == GameMode.HUMAN_LOCAL:  # Human vs AI local
@@ -219,6 +232,7 @@ class MainWindow(QMainWindow):
         self.workerMinimax.signals.result.connect(self.minimaxThreadResult)
         self.workerMinimax.signals.done.connect(self.minimaxThreadDone)
         # Run thread
+        self.timerStart = time.time()
         self.threadPool.start(self.workerMinimax)
 
     def calculateAIMoveLocal(self):
@@ -230,6 +244,7 @@ class MainWindow(QMainWindow):
         self.workerLocal.signals.result.connect(self.minimaxThreadResult)
         self.workerLocal.signals.done.connect(self.minimaxThreadDone)
         # Run thread
+        self.timerStart = time.time()
         self.threadPool.start(self.workerLocal)
 
     def minimaxThreadException(self, exception):
@@ -249,9 +264,15 @@ class MainWindow(QMainWindow):
         # next AI player if AI vs AI, else return control to human
         if self.gameMode == GameMode.MINIMAX_LOCAL:
             if self.gameState.act_player == Player.GREEN:
+                self.timerMinimax += time.time() - self.timerStart
                 self.calculateAIMoveLocal()
             else:
+                self.timerLocal += time.time() - self.timerStart
                 self.calculateAIMoveMinimax()
+        elif self.gameMode == GameMode.HUMAN_LOCAL:
+            self.timerLocal += time.time() - self.timerStart
+        else:  # self.gameMode == GameMode.HUMAN_MINIMAX
+            self.timerMinimax += time.time() - self.timerStart
 
     def minimaxThreadDone(self):
         print("AI move calculation done")
