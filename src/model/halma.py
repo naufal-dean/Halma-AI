@@ -210,7 +210,7 @@ class Board:
             res = self.minimax_rec(id, True, 0, None, -sys.maxsize, sys.maxsize)
             opt_step_cost_list.append(res)
             ed = time.time()
-            print("Done in", ed - st, "secon.", opt_step_cost_list[-1])
+            print("Done in", ed - st, "second.", opt_step_cost_list[-1])
             # check time
             delta = time.time() - self.timer
             if delta > self.max_time:  # time up
@@ -272,7 +272,7 @@ class Board:
             res = self.minimax_with_local_rec(id, True, 0, None, -sys.maxsize, sys.maxsize, anneal_threshold)
             opt_step_cost_list.append(res)
             ed = time.time()
-            print("Done in", ed - st, "secon.", opt_step_cost_list[-1])
+            print("Done in", ed - st, "second.", opt_step_cost_list[-1])
             # check time
             delta = time.time() - self.timer
             if delta > self.max_time:  # time up

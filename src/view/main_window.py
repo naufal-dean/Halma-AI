@@ -236,9 +236,9 @@ class MainWindow(QMainWindow):
         print(exception)
 
     def minimaxThreadResult(self, res):
-        if res is None:
-            print("No move available"); return
         step = res[1]
+        if step is None:
+            print("No move available"); return
         self.gameState.board.apply_step(step)
         self.updatePionPositionUI()
         # check if AI win
