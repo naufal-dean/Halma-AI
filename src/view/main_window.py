@@ -224,7 +224,6 @@ class MainWindow(QMainWindow):
     def calculateAIMoveLocal(self):
         print('ai move local')
         # Create worker instance
-        # TODO: change to local search + minimax
         self.workerLocal = Worker(self.gameState.board.minimax_with_local, self.gameState.act_player)
         # Connect signals
         self.workerLocal.signals.exception.connect(self.minimaxThreadException)

@@ -170,10 +170,32 @@ class Board:
 
     # minimax algorithm
     def minimax(self, id: int):
-        self.max_depth = 3
         self.timer = time.time()
         self.child = 0
-        return self.minimax_rec(id, True, 0, None, -sys.maxsize, sys.maxsize)
+        # save and reset max_depth
+        default_max_depth = self.max_depth
+        self.max_depth = 0
+        opt_step_cost_list = []
+        # try using iterative deepening approach
+        while True:
+            self.max_depth += 1
+            print("Try using max_depth =", self.max_depth)
+            st = time.time()
+            res = self.minimax_rec(id, True, 0, None, -sys.maxsize, sys.maxsize)
+            opt_step_cost_list.append(res)
+            ed = time.time()
+            print("Done in", ed - st, "secon.", opt_step_cost_list[-1])
+            # check time
+            delta = time.time() - self.timer
+            if delta > self.max_time:  # time up
+                break
+        # reset max_depth to the default value
+        self.max_depth = default_max_depth
+        # return
+        if len(opt_step_cost_list) > 1:
+            return opt_step_cost_list[-2]
+        else:
+            return opt_step_cost_list[-1]
 
     def minimax_rec(self, id: int, maxing: bool, depth: int, step: tuple, a: int, b: int):
         self.child += 1
@@ -204,15 +226,38 @@ class Board:
 
     # minimax_with_local algorithm (local search using simulated annealing)
     # sample_div: max loop in each minimax level == max(sample_min, len(steps) // sample_div)
-    def minimax_with_local(self, id: int, anneal_threshold: float = 0.8,
-                           sample_min: int = 25, sample_div: float = 1.5):
+    def minimax_with_local(self, id: int, anneal_threshold: float = 0.9,
+                           sample_min: int = 30, sample_div: float = 1.4):
         assert 0 <= anneal_threshold <= 1
-        self.max_depth = 3
         self.timer = time.time()
+        # set parameter
         self.child = 0
         self.sample_min = sample_min
         self.sample_div = sample_div
-        return self.minimax_with_local_rec(id, True, 0, None, -sys.maxsize, sys.maxsize, anneal_threshold)
+        # save and reset max_depth
+        default_max_depth = self.max_depth
+        self.max_depth = 0
+        opt_step_cost_list = []
+        # try using iterative deepening approach
+        while True:
+            self.max_depth += 1
+            print("Try using max_depth =", self.max_depth)
+            st = time.time()
+            res = self.minimax_with_local_rec(id, True, 0, None, -sys.maxsize, sys.maxsize, anneal_threshold)
+            opt_step_cost_list.append(res)
+            ed = time.time()
+            print("Done in", ed - st, "secon.", opt_step_cost_list[-1])
+            # check time
+            delta = time.time() - self.timer
+            if delta > self.max_time:  # time up
+                break
+        # reset max_depth to the default value
+        self.max_depth = default_max_depth
+        # return
+        if len(opt_step_cost_list) > 1:
+            return opt_step_cost_list[-2]
+        else:
+            return opt_step_cost_list[-1]
 
     def minimax_with_local_rec(self, id: int, maxing: bool, depth: int, step: tuple, a: int, b: int, anneal_threshold: float):
         self.child += 1
@@ -235,27 +280,24 @@ class Board:
                 dE = res[0] - opt_step_cost[0]
                 if dE > 0:
                     opt_step_cost = (res[0], step)
+                elif dE == 0:
+                    if random.randint(1, 2) == 1:
+                        opt_step_cost = (res[0], step)
                 else:
                     if math.exp(dE / T) > anneal_threshold:
                         opt_step_cost = (res[0], step)
             else:
                 dE = res[0] - opt_step_cost[0]
-                if dE < 0:
+                if dE <= 0:
                     opt_step_cost = (res[0], step)
+                elif dE == 0:
+                    if random.randint(1, 2) == 1:
+                        opt_step_cost = (res[0], step)
                 else:
                     if math.exp(- dE / T) > anneal_threshold:
                         opt_step_cost = (res[0], step)
 
             self.undo_step(step)
-            # Pruning
-            if self.prune:
-                if maxing:
-                    a = a if a >= res[0] else res[0]
-                else:
-                    b = b if b <= res[0] else res[0]
-
-                if a >= b:
-                    break
             # update temperature
             T -= 1
         return opt_step_cost
@@ -269,7 +311,8 @@ class Board:
                 self.apply_step(step)
                 print(self.child, time.time()-x)
                 # self.print_matrix()
-                step = self.minimax(2)[1]
+                x = time.time()
+                step = self.minimax_with_local(2)[1]
                 self.apply_step(step)
                 print(self.child, time.time()-x)
                 # self.print_matrix()
