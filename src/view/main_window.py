@@ -200,8 +200,6 @@ class MainWindow(QMainWindow):
             highlightBtn(button, "yellow")
             for legalMove in self.legalMoves:
                 highlightBtn(self.fields.itemAtPosition(legalMove[1].row, legalMove[1].col).widget(), "red")
-        # just some debug, TODO: remove
-        print(r, c)
 
     def setBoardSize(self, boardSize):
         self.boardSize = boardSize

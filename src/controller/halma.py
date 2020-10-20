@@ -17,23 +17,7 @@ class Board:
         self.count_finish_green = 0
         self.gen_board()
         self.set_count_pion()
-        self.child = 0 # Debug
-
-    # Debug
-    def load_from_file(self, filename):
-        d = open(filename, "r").read().split("\n")[:self.size]
-        assert(len(d) == self.size)
-        for i in range(len(d)):
-            a = d[i].split(" | ")
-            d_size = self.size//2
-            c = (d_size-i-1) % self.size
-            for j in range(len(a)):
-                a[j] = int(a[j])
-                if c < d_size and j <= c:
-                    self.count_finish_green += a[j] == Player.GREEN
-                elif c >= d_size and j >= c:
-                    self.count_finish_red += a[j] == Player.RED
-                self.cells[i][j].pion = a[j]
+        self.child = 0
 
     def __getitem__(self, index):
         try:
@@ -327,36 +311,3 @@ class Board:
             # update temperature
             T -= 1
         return opt_step_cost
-
-    # Debug
-    def play(self):
-        try:
-            for i in range(1000):
-                x = time.time()
-                step = self.minimax(1)[1]
-                self.apply_step(step)
-                print(self.child, time.time()-x)
-                # self.print_matrix()
-                x = time.time()
-                step = self.minimax_with_local(2)[1]
-                self.apply_step(step)
-                print(self.child, time.time()-x)
-                # self.print_matrix()
-        except Exception as e:
-            print(e)
-            print("Game finished")
-
-    # Debug
-    def print_matrix(self):
-        for i in range(self.size):
-            for j in range(self.size-1):
-                print(int(self[i, j].pion), end=" | ")
-            print(int(self[i, -1].pion))
-        print()
-
-if __name__ == "__main__":
-    board = Board(16, max_depth=2, max_time=-1, prune=True)
-    # board.load_from_file("test.txt")
-    board.print_matrix()
-    board.play()
-    board.print_matrix()
